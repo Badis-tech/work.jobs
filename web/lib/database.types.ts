@@ -56,6 +56,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_usage: {
+        Row: {
+          count: number
+          day: string
+          kind: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          day?: string
+          kind: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          kind?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           category: string | null
@@ -253,6 +277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_cv_quota: { Args: { p_kind: string }; Returns: number }
       has_active_sub: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -261,6 +286,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refund_cv_quota: { Args: { p_kind: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"

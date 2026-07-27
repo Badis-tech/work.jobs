@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { extractCvText, ExtractError, MAX_UPLOAD_BYTES } from "@/lib/cv-extract";
+import {
+  consumeQuota,
+  quotaExceededResponse,
+  refundQuota,
+} from "@/lib/cv-quota";
 
 // PDF parsing needs Node APIs (Buffer, pdfjs) — not available on edge.
 export const runtime = "nodejs";
@@ -34,14 +39,25 @@ export async function POST(request: Request) {
     );
   }
 
+  // Cheaper than a generation but still CPU-bound parsing of attacker-supplied
+  // files, so it gets its own (larger) budget.
+  const quota = await consumeQuota("extract");
+  if (!quota.allowed) {
+    const { body, headers } = quotaExceededResponse(quota);
+    return NextResponse.json(body, { status: 429, headers });
+  }
+
   try {
     const result = await extractCvText(file);
     return NextResponse.json(result);
   } catch (e) {
     // ExtractError messages are written for the applicant — safe to surface.
+    // No refund here: the parse ran, and an unreadable upload is exactly what
+    // someone hammering this endpoint would send.
     if (e instanceof ExtractError) {
       return NextResponse.json({ error: e.message }, { status: 422 });
     }
+    await refundQuota("extract");
     console.error("CV extract failed:", e);
     return NextResponse.json(
       { error: "Datei konnte nicht verarbeitet werden." },

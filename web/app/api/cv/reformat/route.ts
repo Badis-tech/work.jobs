@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin";
 import { reformatToGerman } from "@/lib/cv-engine";
+import {
+  consumeQuota,
+  quotaExceededResponse,
+  refundQuota,
+} from "@/lib/cv-quota";
 import { saveCvDocument } from "@/lib/cv-store";
 
 // Measured against the live free tier: a full structured generation takes
@@ -36,6 +41,13 @@ export async function POST(request: Request) {
     );
   }
 
+  // Charged before the model call, for the same reason as /generate.
+  const quota = await consumeQuota("reformat");
+  if (!quota.allowed) {
+    const { body, headers } = quotaExceededResponse(quota);
+    return NextResponse.json(body, { status: 429, headers });
+  }
+
   try {
     const docs = await reformatToGerman(
       text,
@@ -57,6 +69,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ...docs, id });
   } catch (e) {
+    await refundQuota("reformat");
     const msg = e instanceof Error ? e.message : "generation failed";
     console.error("CV reformat failed:", msg);
     return NextResponse.json({ error: msg }, { status: 500 });
