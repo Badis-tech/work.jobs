@@ -163,6 +163,21 @@ function normAnschreiben(v: unknown): Anschreiben {
   // DIN 5008 forbids the literal "Betreff:" label; models add it anyway.
   betreff = betreff.replace(/^betreff\s*:\s*/i, "");
 
+  // Models routinely open the first paragraph with the salutation as well,
+  // which renders as a letter that greets the reader twice — `anrede` is a
+  // separate field and the layout already puts it on its own line.
+  const absaetze = strArray(o.absaetze ?? o.absätze ?? o.paragraphs ?? o.text);
+  if (absaetze.length > 0) {
+    const stripped = absaetze[0].replace(
+      /^sehr\s+geehrte[rn]?\s+(?:frau|herr|herrn|damen)[^,]*,\s*/i,
+      "",
+    );
+    // Only when something is left: a paragraph that is *only* the salutation
+    // should disappear rather than become an empty one.
+    if (stripped) absaetze[0] = stripped[0].toUpperCase() + stripped.slice(1);
+    else absaetze.shift();
+  }
+
   return {
     absender: {
       name: str(abs.name),
@@ -175,7 +190,7 @@ function normAnschreiben(v: unknown): Anschreiben {
     datum: optStr(o.datum),
     betreff,
     anrede: str(o.anrede ?? o.salutation) || "Sehr geehrte Damen und Herren,",
-    absaetze: strArray(o.absaetze ?? o.absätze ?? o.paragraphs ?? o.text),
+    absaetze,
     gruss: str(o.gruss ?? o.gruß ?? o.closing) || "Mit freundlichen Grüßen",
     unterschrift: str(o.unterschrift ?? o.signature ?? abs.name),
   };
@@ -194,7 +209,17 @@ export function normalizeDocs(raw: unknown): GeneratedDocs {
   }
   const o = raw as Record<string, unknown>;
   const lebenslauf = normLebenslauf(o.lebenslauf);
-  const anschreiben = normAnschreiben(o.anschreiben);
+
+  // Observed against nemotron-3-super: the model closes the `lebenslauf` object
+  // one brace too late, so the whole Anschreiben arrives nested inside it and
+  // the top-level key is missing. The content is perfectly good — only the
+  // nesting is wrong — so look there before declaring the response unusable.
+  let anschreiben = normAnschreiben(o.anschreiben);
+  if (anschreiben.absaetze.length === 0) {
+    const nested = (o.lebenslauf as Record<string, unknown> | null | undefined)
+      ?.anschreiben;
+    if (nested) anschreiben = normAnschreiben(nested);
+  }
 
   if (!lebenslauf.persoenlicheDaten.name) {
     throw new ShapeError("Lebenslauf is missing the applicant name");
