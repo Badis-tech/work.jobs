@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
-import { useUiLang, LangToggle, type L } from "./cv-i18n";
+import { useUiLang, LangToggle, type L } from "./lang";
 
 // Primary app navigation. Client-side so links can show an active state and the
 // labels follow the shared language. `email` is resolved on the server and
 // passed down (auth is server-only).
 const NAV: { href: string; label: L; exact?: boolean }[] = [
   { href: "/", label: { de: "Jobs", en: "Jobs" }, exact: true },
-  { href: "/cv", label: { de: "Bewerbung", en: "Application" } },
+  { href: "/pricing", label: { de: "Preise", en: "Pricing" } },
 ];
 
 const T = {
@@ -48,7 +48,13 @@ export function HeaderNav({ email }: { email: string | null }) {
 
       {email ? (
         <>
-          <span className="hidden text-zinc-500 md:inline">{email}</span>
+          <Link
+            href="/account"
+            aria-current={pathname.startsWith("/account") ? "page" : undefined}
+            className="hidden rounded-md px-2.5 py-1.5 font-medium text-zinc-600 hover:bg-zinc-100 hover:text-brand md:inline dark:text-zinc-400 dark:hover:bg-zinc-900"
+          >
+            {email}
+          </Link>
           <form action={signOut}>
             <button
               type="submit"

@@ -2,7 +2,7 @@
 
 The `ingest-jobs` Edge Function pulls from two kinds of sources:
 
-- **Keyless sources** (always active, nothing to configure): Remotive, Arbeitnow, Jobicy, The Muse, Bundesagentur für Arbeit Jobsuche.
+- **Keyless sources** (always active, nothing to configure): Bundesagentur für Arbeit Jobsuche, Arbeitnow, Remotive, Jobicy, Remote OK, Himalayas, Working Nomads, Landing.jobs.
 - **Key-based sources** (coded but dormant until you set their secrets): **Adzuna**, **Jooble**, **USAJOBS**.
 
 A key-based source whose required environment variables are missing is simply reported as `"skipped"` in the function response — nothing breaks. This guide covers getting the keys and turning each source on.
@@ -15,11 +15,10 @@ A key-based source whose required environment variables are missing is simply re
 2. [Adzuna](#adzuna)
 3. [Jooble](#jooble)
 4. [USAJOBS](#usajobs)
-5. [The Muse (optional key)](#the-muse-optional-key)
-6. [Setting the secrets](#setting-the-secrets)
-7. [Testing a single source](#testing-a-single-source)
-8. [Verifying results](#verifying-results)
-9. [Environment variable reference](#environment-variable-reference)
+5. [Setting the secrets](#setting-the-secrets)
+6. [Testing a single source](#testing-a-single-source)
+7. [Verifying results](#verifying-results)
+8. [Environment variable reference](#environment-variable-reference)
 
 ---
 
@@ -27,7 +26,7 @@ A key-based source whose required environment variables are missing is simply re
 
 Each key-based source declares `requiredEnv` in `supabase/functions/ingest-jobs/index.ts`. On every run the function checks those variables:
 
-- **All present** → the source fetches, writes to `raw_jobs` + `jobs`, and logs a `pipeline_runs` row.
+- **All present** → the source fetches, writes to `jobs`, and logs a `pipeline_runs` row.
 - **Any missing** → the source returns `status: "skipped"` in the HTTP response and writes **no** `pipeline_runs` row.
 
 So activation is purely a matter of setting Edge Function secrets — no code change, no redeploy needed (secrets are injected on the next invocation).
@@ -104,15 +103,6 @@ The pipeline fetches the 250 most recently posted positions per run.
 
 ---
 
-## The Muse (optional key)
-
-The Muse already runs keyless. An API key only **raises the rate limit** — it does not unlock anything else.
-
-1. Register at <https://www.themuse.com/developers/api/v2> (free).
-2. Set `THEMUSE_API_KEY` if you ever see The Muse failing with HTTP 429 in `pipeline_runs`.
-
----
-
 ## Setting the secrets
 
 Set the variables as **Edge Function secrets** (not in `web/.env.local` — the frontend never talks to these APIs).
@@ -151,7 +141,9 @@ curl -s "https://qhcqecodncwrpnlhullo.supabase.co/functions/v1/ingest-jobs?sourc
   -H "Authorization: Bearer <anon key>"
 ```
 
-Valid source names: `remotive`, `arbeitnow`, `jobicy`, `themuse`, `jobsuche`, `adzuna`, `jooble`, `usajobs`.
+Valid source names: `remotive`, `arbeitnow`, `jobsuche`, `jobicy`, `remoteok`, `himalayas`, `workingnomads`, `landingjobs`, `adzuna`, `jooble`, `usajobs`.
+
+The Muse was removed in November 2026: its public API now returns 404.
 
 Expected responses:
 
@@ -194,4 +186,3 @@ Remember: skipped sources write **no** `pipeline_runs` row, so absence of a row 
 | `JOOBLE_LOCATION` | Jooble | — | (empty) |
 | `USAJOBS_API_KEY` | USAJOBS | ✅ | — |
 | `USAJOBS_EMAIL` | USAJOBS | ✅ | — |
-| `THEMUSE_API_KEY` | The Muse | — (rate limit only) | (keyless) |

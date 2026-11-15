@@ -1,6 +1,6 @@
-# Jobs Pipeline — Setup and Deployment Guide
+# work.jobs — Setup and Deployment Guide
 
-This guide covers local development, Vercel deployment, and self-hosted deployment options for the jobs-pipe-line project.
+This guide covers local development, Vercel deployment, and self-hosted deployment options for the work.jobs project (GitHub repo: `jobs-pipe-line`).
 
 ---
 
@@ -366,7 +366,7 @@ Create `/etc/systemd/system/jobs-pipeline.service`:
 
 ```ini
 [Unit]
-Description=Jobs Pipeline Next.js App
+Description=work.jobs Next.js App
 After=network.target
 
 [Service]

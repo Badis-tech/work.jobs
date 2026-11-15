@@ -173,6 +173,89 @@ export type Database = {
         }
         Relationships: []
       }
+      job_alerts: {
+        Row: {
+          created_at: string
+          id: number
+          job_type: string | null
+          last_sent_at: string
+          query: string | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          job_type?: string | null
+          last_sent_at?: string
+          query?: string | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          job_type?: string | null
+          last_sent_at?: string
+          query?: string | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          alerts_limit: number
+          id: string
+          name: string
+          rank: number
+          saved_jobs_limit: number | null
+          unlimited_browsing: boolean
+        }
+        Insert: {
+          alerts_limit: number
+          id: string
+          name: string
+          rank: number
+          saved_jobs_limit?: number | null
+          unlimited_browsing: boolean
+        }
+        Update: {
+          alerts_limit?: number
+          id?: string
+          name?: string
+          rank?: number
+          saved_jobs_limit?: number | null
+          unlimited_browsing?: boolean
+        }
+        Relationships: []
+      }
+      saved_jobs: {
+        Row: {
+          created_at: string
+          job_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          job_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          job_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -222,6 +305,7 @@ export type Database = {
           ls_customer_id: string | null
           ls_subscription_id: string | null
           ls_variant_id: string | null
+          plan: string
           renews_at: string | null
           status: string
           updated_at: string
@@ -233,6 +317,7 @@ export type Database = {
           ls_customer_id?: string | null
           ls_subscription_id?: string | null
           ls_variant_id?: string | null
+          plan?: string
           renews_at?: string | null
           status?: string
           updated_at?: string
@@ -244,6 +329,7 @@ export type Database = {
           ls_customer_id?: string | null
           ls_subscription_id?: string | null
           ls_variant_id?: string | null
+          plan?: string
           renews_at?: string | null
           status?: string
           updated_at?: string
@@ -278,6 +364,7 @@ export type Database = {
     }
     Functions: {
       consume_cv_quota: { Args: { p_kind: string }; Returns: number }
+      current_plan: { Args: never; Returns: string }
       has_active_sub: { Args: never; Returns: boolean }
       has_role: {
         Args: {

@@ -2,6 +2,7 @@ import { fetchJobs, FREE_PAGES } from "@/lib/jobs";
 import { isEntitled } from "@/lib/entitlement";
 import { Filters } from "@/components/filters";
 import { JobCard } from "@/components/job-card";
+import { AlertButton } from "@/components/alert-button";
 import { Pagination } from "@/components/pagination";
 import { Paywall } from "@/components/paywall";
 import { createSupabaseServer } from "@/lib/supabase-server";
@@ -36,7 +37,7 @@ export default async function Home({
         <main className="mx-auto w-full max-w-3xl px-4 py-8">
           <header className="mb-6">
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Ausbildung Jobs
+              work.jobs
             </h1>
           </header>
           <Filters q={q} source={source} type={type} />
@@ -47,6 +48,18 @@ export default async function Home({
   }
 
   const { jobs, total, pageCount } = await fetchJobs({ q, source, type, page });
+
+  // Which of these jobs the signed-in user has saved (RLS limits rows to them).
+  const supabase = await createSupabaseServer();
+  const { data: savedRows } = jobs.length
+    ? await supabase.from("saved_jobs").select("job_id").in("job_id", jobs.map((j) => j.id))
+    : { data: [] };
+  const savedIds = new Set((savedRows ?? []).map((r) => r.job_id));
+  const returnParams = new URLSearchParams();
+  for (const [k, v] of Object.entries({ q, source, type, page: page > 1 ? String(page) : undefined })) {
+    if (v) returnParams.set(k, v);
+  }
+  const returnTo = returnParams.size ? `/?${returnParams}` : "/";
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">
@@ -62,19 +75,20 @@ export default async function Home({
           Find your <span className="text-brand">Ausbildung</span> in Germany
         </h1>
         <p className="mt-2 text-sm text-zinc-500">
-          {total.toLocaleString("en-GB")} live postings from Remotive, Arbeitnow, Jobicy, The
-          Muse and the Bundesagentur für Arbeit.
+          {total.toLocaleString("en-GB")} live postings from the Bundesagentur für Arbeit,
+          Arbeitnow, Remotive, Jobicy, Remote OK, Himalayas, Working Nomads and Landing.jobs.
         </p>
       </header>
 
       <Filters q={q} source={source} type={type} />
+      <AlertButton q={q} source={source} type={type} returnTo={returnTo} />
 
       {jobs.length === 0 ? (
         <p className="mt-10 text-center text-zinc-500">No jobs match these filters.</p>
       ) : (
         <ul className="mt-6 space-y-3">
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard key={job.id} job={job} saved={savedIds.has(job.id)} returnTo={returnTo} />
           ))}
         </ul>
       )}

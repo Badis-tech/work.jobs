@@ -8,6 +8,23 @@ export function LoginForm({ next }: { next?: string }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // OAuth needs the provider enabled in the Supabase dashboard
+  // (Authentication -> Providers) with this site's callback URL allowed.
+  async function oauth(provider: "google" | "github") {
+    setError(null);
+    const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    const { error } = await createSupabaseBrowser().auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`,
+      },
+    });
+    if (error) {
+      setError(error.message);
+      setStatus("error");
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
@@ -47,7 +64,20 @@ export function LoginForm({ next }: { next?: string }) {
     );
   }
 
+  const oauthBtn =
+    "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900";
+
   return (
+    <div className="space-y-4">
+    <div className="space-y-2">
+      <button type="button" onClick={() => oauth("google")} className={oauthBtn}>
+        Continue with Google
+      </button>
+      <button type="button" onClick={() => oauth("github")} className={oauthBtn}>
+        Continue with GitHub
+      </button>
+      <p className="pt-1 text-center text-xs text-zinc-400">or use a magic link</p>
+    </div>
     <form onSubmit={onSubmit} className="space-y-3">
       <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
         Email
@@ -70,5 +100,6 @@ export function LoginForm({ next }: { next?: string }) {
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </form>
+    </div>
   );
 }

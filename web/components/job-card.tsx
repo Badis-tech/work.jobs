@@ -1,8 +1,17 @@
 import Link from "next/link";
 import type { JobListItem } from "@/lib/jobs";
+import { SaveButton } from "./save-button";
 import { formatDate, formatLocation, formatSalary, sourceLabel, typeLabel } from "@/lib/format";
 
-export function JobCard({ job }: { job: JobListItem }) {
+export function JobCard({
+  job,
+  saved = false,
+  returnTo = "/",
+}: {
+  job: JobListItem;
+  saved?: boolean;
+  returnTo?: string;
+}) {
   const location = formatLocation(job.location);
   const salary = formatSalary(job.salary_text);
   const meta = [job.company, location].filter(Boolean).join(" · ");
@@ -26,6 +35,10 @@ export function JobCard({ job }: { job: JobListItem }) {
           <Badge variant="muted">{sourceLabel(job.source)}</Badge>
         </div>
       </Link>
+      {/* Sibling of the Link (forms can't nest inside anchors). */}
+      <div className="absolute bottom-2 right-2">
+        <SaveButton jobId={job.id} saved={saved} returnTo={returnTo} />
+      </div>
     </li>
   );
 }

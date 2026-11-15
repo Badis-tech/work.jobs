@@ -26,7 +26,16 @@ export const FREE_PAGES = 2;
 
 // Sources currently ingesting; adzuna/jooble/usajobs join once their API
 // keys are configured in the Edge Function secrets.
-export const SOURCES = ["remotive", "arbeitnow", "jobsuche", "jobicy", "themuse"] as const;
+export const SOURCES = [
+  "jobsuche",
+  "arbeitnow",
+  "remotive",
+  "jobicy",
+  "remoteok",
+  "himalayas",
+  "workingnomads",
+  "landingjobs",
+] as const;
 
 // job_type values worth a dedicated filter. Other sources store their own
 // strings (e.g. "full_time"); extend here as filters grow.

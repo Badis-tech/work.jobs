@@ -3,3 +3,6 @@
 
 # supabase CLI cache
 supabase/.temp/
+
+# data exports (contain personal data)
+supabase/backups/

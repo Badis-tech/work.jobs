@@ -3,12 +3,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 // App-wide UI language. One provider at the root backs every client component,
-// so a single toggle in the header switches the whole chrome (header nav, CV
-// tabs) and the tool bodies live. Generated documents stay German for now —
-// English *document* output is a separate follow-up.
+// so a single toggle in the header switches the whole chrome.
 export type Lang = "de" | "en";
 export type L = { de: string; en: string };
 
+// Storage key kept from the old CV tool so saved language choices survive.
 const LANG_KEY = "cv-form-lang";
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void };
@@ -58,31 +57,6 @@ export function LangToggle() {
           {l}
         </button>
       ))}
-    </div>
-  );
-}
-
-// Tool heading (badge + title + subtitle). The language toggle lives in the
-// global header now, so this is heading-only.
-export function ToolHeader({
-  badge,
-  title,
-  subtitle,
-}: {
-  badge: L;
-  title: L;
-  subtitle: L;
-}) {
-  const { t } = useUiLang();
-  return (
-    <div className="mb-6">
-      <div className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand">
-        {t(badge)}
-      </div>
-      <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-        {t(title)}
-      </h1>
-      <p className="mt-1 text-sm text-zinc-500">{t(subtitle)}</p>
     </div>
   );
 }

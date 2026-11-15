@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as crypto from "node:crypto";
 import type { Database } from "@/lib/database.types";
+import { planForVariant } from "@/lib/plans";
 
 // Lemon Squeezy webhook. This is the ONLY writer of subscription entitlements.
 // It verifies the HMAC signature, then upserts the user's subscription row via
@@ -71,7 +72,13 @@ export async function POST(request: Request) {
     auth: { persistSession: false },
   });
 
+  // Tier follows the purchased variant. An unrecognised variant leaves the
+  // existing plan untouched (new rows fall back to the column default).
+  const plan = planForVariant(attrs?.variant_id ? String(attrs.variant_id) : null);
+  if (!plan) console.error("webhook: variant not mapped to a plan:", attrs?.variant_id);
+
   const row = {
+    ...(plan ? { plan } : {}),
     user_id: userId,
     ls_subscription_id: String(event?.data?.id ?? ""),
     ls_customer_id: attrs?.customer_id ? String(attrs.customer_id) : null,

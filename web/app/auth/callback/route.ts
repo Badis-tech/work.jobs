@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase-server";
-import { isAdmin } from "@/lib/admin";
 
 // Magic-link / OAuth callback. Supabase redirects here with a `code` we
-// exchange for a session cookie, then bounce the user to `next` (or a sensible
-// default: /cv for admins, home for everyone else).
+// exchange for a session cookie, then bounce the user to `next` (or home).
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -21,9 +19,8 @@ export async function GET(request: Request) {
     const supabase = await createSupabaseServer();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Honour an explicit destination; otherwise send admins to the internal
-      // CV tool and regular users to the jobs home.
-      const dest = explicitNext ?? ((await isAdmin()) ? "/cv" : "/");
+      // Honour an explicit destination; otherwise go to the jobs home.
+      const dest = explicitNext ?? "/";
       return NextResponse.redirect(new URL(dest, url.origin));
     }
   }

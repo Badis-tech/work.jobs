@@ -26,10 +26,10 @@ export function Paywall({ loggedIn, attemptedPage }: PaywallProps) {
 
         {loggedIn ? (
           <Link
-            href={`/checkout?next=${attemptedPage}`}
+            href="/pricing"
             className="mt-4 inline-block rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark"
           >
-            Unlock unlimited — €4.99/mo
+            See plans — from €4.99/mo
           </Link>
         ) : (
           <Link

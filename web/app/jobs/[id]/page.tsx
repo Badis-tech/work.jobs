@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import sanitizeHtml from "sanitize-html";
 import { fetchJob } from "@/lib/jobs";
 import { formatDate, sourceLabel, typeLabel } from "@/lib/format";
+import { markdownToHtml } from "@/lib/markdown";
 
 // description_html comes from external job APIs and is untrusted.
 function sanitizeDescription(html: string): string {
@@ -18,6 +19,15 @@ function sanitizeDescription(html: string): string {
   });
 }
 
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
 export default async function JobPage({
   params,
 }: {
@@ -29,9 +39,13 @@ export default async function JobPage({
   const job = await fetchJob(jobId);
   if (!job) notFound();
 
-  const description = job.description_html ? sanitizeDescription(job.description_html) : "";
-  // Jobsuche descriptions are plain text with newlines, not HTML.
-  const isPlainText = description !== "" && !description.includes("<");
+  // Jobsuche descriptions are Markdown / plain text with newlines, not HTML;
+  // convert those first. Either way the result goes through the sanitizer.
+  let raw = job.description_html?.trim() ?? "";
+  // Some feeds (Arbeitnow, ~1 in 5 postings) send the HTML entity-escaped.
+  if (raw.startsWith("&lt;")) raw = decodeEntities(raw);
+  const isMarkup = job.source !== "jobsuche" && /<[a-z][^>]*>/i.test(raw);
+  const description = raw ? sanitizeDescription(isMarkup ? raw : markdownToHtml(raw)) : "";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -66,8 +80,6 @@ export default async function JobPage({
         <p className="mt-6 text-sm text-zinc-500">
           No description available — see the original posting.
         </p>
-      ) : isPlainText ? (
-        <p className="job-description mt-6 whitespace-pre-line">{description}</p>
       ) : (
         <div
           className="job-description mt-6"
