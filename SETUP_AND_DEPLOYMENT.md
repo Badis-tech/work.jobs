@@ -1,6 +1,6 @@
 # work.jobs — Setup and Deployment Guide
 
-This guide covers local development, Vercel deployment, and self-hosted deployment options for the work.jobs project (GitHub repo: `jobs-pipe-line`).
+This guide covers local development, Vercel deployment, and self-hosted deployment options for the work.jobs project.
 
 ---
 
@@ -27,13 +27,13 @@ This guide covers local development, Vercel deployment, and self-hosted deployme
 
 ```bash
 git clone <repository-url>
-cd jobs-pipe-line
+cd work.jobs
 ```
 
 **If the folder is already on your machine:**
 
 ```bash
-cd /path/to/jobs-pipe-line
+cd /path/to/work.jobs
 ```
 
 ### Step 2: Navigate to the Web Directory

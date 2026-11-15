@@ -1,6 +1,6 @@
 # work.jobs
 
-Supabase-native jobs ETL with a Next.js frontend. (Formerly `jobs-pipe-line`; the GitHub repo and Vercel project still carry that name.)
+Supabase-native jobs ETL with a Next.js frontend. (Formerly `jobs-pipe-line`; the production URL still uses that name.)
 
 - **Pipeline** — the `ingest-jobs` Edge Function (`supabase/functions/ingest-jobs/`) pulls from the sources below into a normalized `jobs` table, with per-run logging in `pipeline_runs`. Scheduled every 6 hours via pg_cron; do not tighten that schedule (Remotive's terms ask for ~4 calls/day). A second cron calls `?mode=enrich` every 10 minutes to fill in Jobsuche descriptions (300 per call), which need one detail request per job — doing that inside the ingest run exceeds the function's compute limit.
 - **Web** — Next.js app in `web/`, live at [jobs-pipe-line.vercel.app](https://jobs-pipe-line.vercel.app). Pushes to `main` deploy automatically via the Vercel git integration (project root directory: `web`).
