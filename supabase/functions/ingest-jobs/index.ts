@@ -23,6 +23,10 @@ interface NormalizedJob {
   description_html?: string | null;
   published_at: string | null;
   last_seen_at: string;
+  // Workplace coordinates (WGS84) when the source provides them; shown on
+  // the quest-os map. Omitted by sources that have none.
+  lat?: number | null;
+  lng?: number | null;
 }
 
 interface Source {
@@ -185,6 +189,16 @@ const JOBSUCHE_ENRICH_BATCH = 100;
 const JOBSUCHE_ENRICH_MAX = 300;
 const JOBSUCHE_ENRICH_CONCURRENCY = 8;
 
+// First workplace of a posting with usable coordinates.
+function jobsucheCoords(locations: unknown): { lat: number; lng: number } | null {
+  for (const l of Array.isArray(locations) ? locations : []) {
+    const lat = Number(l?.breite);
+    const lng = Number(l?.laenge);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) return { lat, lng };
+  }
+  return null;
+}
+
 const jobsuche: Source = {
   name: "jobsuche",
   async fetch() {
@@ -205,6 +219,7 @@ const jobsuche: Source = {
           if (!j.referenznummer || !j.stellenangebotsTitel || seen.has(j.referenznummer)) continue;
           seen.add(j.referenznummer);
           const address = j.stellenlokationen?.[0]?.adresse;
+          const coords = jobsucheCoords(j.stellenlokationen);
           const location = address
             ? [address.ort, address.region, address.land].filter(Boolean).join(", ")
             : null;
@@ -227,6 +242,8 @@ const jobsuche: Source = {
             url: `https://www.arbeitsagentur.de/jobsuche/jobdetail/${encodeURIComponent(j.referenznummer)}`,
             published_at: toUtcIso(j.datumErsteVeroeffentlichung ?? j.veroeffentlichungszeitraum?.von),
             last_seen_at: now,
+            lat: coords?.lat ?? null,
+            lng: coords?.lng ?? null,
           });
         }
         if (items.length === 0) break;
@@ -262,6 +279,7 @@ const jobsuche: Source = {
         if (Date.now() >= deadline) return;
         const encoded = encodeURIComponent(btoa(job.external_id));
         let description: string | null = null;
+        let coords: { lat: number; lng: number } | null = null;
         try {
           const res = await fetch(`${JOBSUCHE_BASE}/v4/jobdetails/${encoded}`, {
             headers: { ...JOBSUCHE_HEADERS, "User-Agent": USER_AGENT },
@@ -270,6 +288,7 @@ const jobsuche: Source = {
           if (res.ok) {
             const detail = await res.json();
             description = detail.stellenangebotsBeschreibung ?? "";
+            coords = jobsucheCoords(detail.stellenlokationen);
           } else {
             await res.body?.cancel();
             if (res.status === 404) description = "";
@@ -281,7 +300,7 @@ const jobsuche: Source = {
         if (description === null) return;
         const { error: updateError } = await supabase
           .from("jobs")
-          .update({ description_html: description })
+          .update(coords ? { description_html: description, ...coords } : { description_html: description })
           .eq("id", job.id);
         if (!updateError) progressed++;
       });
