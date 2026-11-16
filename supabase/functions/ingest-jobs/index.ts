@@ -519,6 +519,13 @@ const landingjobs: Source = {
   },
 };
 
+function adzunaCoords(j: { latitude?: unknown; longitude?: unknown }): { lat: number | null; lng: number | null } {
+  const lat = j.latitude == null ? NaN : Number(j.latitude);
+  const lng = j.longitude == null ? NaN : Number(j.longitude);
+  if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) return { lat, lng };
+  return { lat: null, lng: null };
+}
+
 // Adzuna aggregator (https://developer.adzuna.com/). Free tier: 25 req/min,
 // 250 req/day — country list × 2 pages × 4 runs/day stays well inside that.
 const adzuna: Source = {
@@ -556,8 +563,8 @@ const adzuna: Source = {
             published_at: toUtcIso(j.created),
             last_seen_at: now,
             // Adzuna returns coordinates per listing (not always present).
-            lat: Number.isFinite(Number(j.latitude)) && j.latitude != null ? Number(j.latitude) : null,
-            lng: Number.isFinite(Number(j.longitude)) && j.longitude != null ? Number(j.longitude) : null,
+            // (0, 0) is a missing value, not a place: same rule as jobsuche.
+            ...adzunaCoords(j),
           });
         }
         if (items.length === 0) break;
