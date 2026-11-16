@@ -3,24 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
-import { useUiLang, LangToggle, type L } from "./lang";
 
-// Primary app navigation. Client-side so links can show an active state and the
-// labels follow the shared language. `email` is resolved on the server and
-// passed down (auth is server-only).
-const NAV: { href: string; label: L; exact?: boolean }[] = [
-  { href: "/", label: { de: "Jobs", en: "Jobs" }, exact: true },
-  { href: "/pricing", label: { de: "Preise", en: "Pricing" } },
+// Primary app navigation. Client-side so links can show an active state.
+// `email` is resolved on the server and passed down (auth is server-only).
+const NAV: { href: string; label: string; exact?: boolean }[] = [
+  { href: "/", label: "Jobs", exact: true },
+  { href: "/pricing", label: "Pricing" },
 ];
-
-const T = {
-  signOut: { de: "Abmelden", en: "Sign out" },
-  signIn: { de: "Anmelden", en: "Sign in" },
-} satisfies Record<string, L>;
 
 export function HeaderNav({ email }: { email: string | null }) {
   const pathname = usePathname();
-  const { t } = useUiLang();
 
   return (
     <nav className="flex items-center gap-1 text-sm sm:gap-2">
@@ -39,12 +31,10 @@ export function HeaderNav({ email }: { email: string | null }) {
                 : "text-zinc-600 hover:bg-zinc-100 hover:text-brand dark:text-zinc-400 dark:hover:bg-zinc-900"
             }`}
           >
-            {t(item.label)}
+            {item.label}
           </Link>
         );
       })}
-
-      <LangToggle />
 
       {email ? (
         <>
@@ -60,7 +50,7 @@ export function HeaderNav({ email }: { email: string | null }) {
               type="submit"
               className="rounded-md border border-zinc-300 px-3 py-1.5 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
-              {t(T.signOut)}
+              Sign out
             </button>
           </form>
         </>
@@ -69,7 +59,7 @@ export function HeaderNav({ email }: { email: string | null }) {
           href="/login"
           className="rounded-md bg-brand px-4 py-1.5 font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark"
         >
-          {t(T.signIn)}
+          Sign in
         </Link>
       )}
     </nav>
