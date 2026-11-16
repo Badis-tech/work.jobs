@@ -555,6 +555,9 @@ const adzuna: Source = {
             description_html: j.description ?? null,
             published_at: toUtcIso(j.created),
             last_seen_at: now,
+            // Adzuna returns coordinates per listing (not always present).
+            lat: Number.isFinite(Number(j.latitude)) && j.latitude != null ? Number(j.latitude) : null,
+            lng: Number.isFinite(Number(j.longitude)) && j.longitude != null ? Number(j.longitude) : null,
           });
         }
         if (items.length === 0) break;

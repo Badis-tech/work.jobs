@@ -17,7 +17,6 @@ const SOURCE_LABELS: Record<string, string> = {
   himalayas: "Himalayas",
   workingnomads: "Working Nomads",
   landingjobs: "Landing.jobs",
-  themuse: "The Muse",
   adzuna: "Adzuna",
   jooble: "Jooble",
   usajobs: "USAJOBS",
